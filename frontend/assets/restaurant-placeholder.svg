@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" role="img" aria-label="Restaurant image unavailable">
+  <rect width="640" height="420" fill="#f1f5f9"/>
+  <path d="M190 330V165l130-82 130 82v165" fill="#fff" stroke="#94a3b8" stroke-width="12" stroke-linejoin="round"/>
+  <path d="M240 330v-94h70v94M350 200h54v50h-54z" fill="#fed7aa" stroke="#f97316" stroke-width="8"/>
+  <path d="M160 330h320" stroke="#64748b" stroke-width="14" stroke-linecap="round"/>
+  <path d="M264 159h112" stroke="#f97316" stroke-width="12" stroke-linecap="round"/>
+</svg>

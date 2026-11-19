@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Restaurant Admin Dashboard – AI Foodie</title>
+  <link rel="icon" href="/static/assets/aifoodie-mark.svg" type="image/svg+xml">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/style.css?v=20261118-visual-refresh">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="bg-light">
+
+  <!-- Top Navbar -->
+  <nav class="navbar navbar-custom sticky-top px-3">
+    <div class="container-fluid">
+      <div class="d-flex align-items-center gap-3">
+        <a class="navbar-brand d-flex align-items-center gap-2 mb-0" href="/">
+          <img class="brand-logo" src="/static/assets/aifoodie-mark.svg" alt="" aria-hidden="true">
+          <span class="brand-font fs-5 text-dark">AI Foodie <span class="badge bg-warning text-dark ms-1">RESTAURANT
+              ADMIN</span></span>
+        </a>
+        <span id="wsLiveIndicator" class="badge bg-secondary-subtle text-secondary border">○ Connecting...</span>
+      </div>
+
+      <div class="d-flex align-items-center gap-3">
+        <div class="d-none d-md-block text-end">
+          <div class="fw-bold" id="adminUserName">Priya Nair (Admin)</div>
+          <div class="small text-muted" id="adminRestaurantLabel">Select or add a restaurant</div>
+        </div>
+        <button class="btn btn-outline-danger btn-sm" onclick="API.logout()">
+          <i class="bi bi-box-arrow-right me-1"></i> Logout
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="dashboard-container">
+    <!-- Sidebar -->
+    <div class="dashboard-sidebar">
+      <div class="text-uppercase small text-secondary fw-bold mb-3 px-3">Restaurant Management</div>
+      <a href="#restaurants" class="sidebar-link" onclick="switchTab('restaurants', this)">
+        <i class="bi bi-shop-window"></i> My Restaurants
+      </a>
+      <a href="#overview" class="sidebar-link active" onclick="switchTab('overview', this)">
+        <i class="bi bi-speedometer2"></i> Dashboard Overview
+      </a>
+      <a href="#orders" class="sidebar-link" onclick="switchTab('orders', this)">
+        <i class="bi bi-receipt"></i> Orders Management
+      </a>
+      <a href="#menu" class="sidebar-link" onclick="switchTab('menu', this)">
+        <i class="bi bi-menu-button-wide"></i> Menu Management
+      </a>
+      <a href="#inventory" class="sidebar-link" onclick="switchTab('inventory', this)">
+        <i class="bi bi-box-seam"></i> Smart Inventory & Expiry
+      </a>
+      <a href="#analytics" class="sidebar-link" onclick="switchTab('analytics', this)">
+        <i class="bi bi-bar-chart-line"></i> Revenue & Peak Analytics
+      </a>
+      <a href="#demand" class="sidebar-link" onclick="switchTab('demand', this)">
+        <i class="bi bi-cpu"></i> AI Demand Forecast (ML)
+      </a>
+
+      <hr class="border-secondary my-4">
+      <div class="text-uppercase small text-secondary fw-bold mb-2 px-3">Expo Role Switching</div>
+      <a href="/pages/kitchen-dashboard.html" class="sidebar-link text-warning">
+        <i class="bi bi-fire"></i> Kitchen KDS
+      </a>
+      <a href="/pages/delivery-dashboard.html" class="sidebar-link text-info">
+        <i class="bi bi-bicycle"></i> Delivery Partner
+      </a>
+      <a href="/pages/customer-dashboard.html" class="sidebar-link text-light">
+        <i class="bi bi-person"></i> Customer View
+      </a>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="dashboard-content">
+
+      <div id="tab-restaurants" class="tab-pane" hidden>
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+          <div>
+            <h4 class="fw-bold mb-1">Restaurant Management</h4>
+            <p class="text-muted small mb-0">Create restaurants and update the details customers see.</p>
+          </div>
+          <div class="d-flex gap-2">
+            <select id="managedRestaurantSelect" class="form-select" aria-label="Select restaurant"
+              onchange="selectManagedRestaurant(this.value)"></select>
+            <button class="btn btn-primary-orange text-nowrap" type="button" onclick="startNewRestaurant()"><i
+                class="bi bi-plus-lg me-1"></i> Add Restaurant</button>
+          </div>
+        </div>
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+          <form id="restaurantForm" class="row g-3">
+            <div class="col-md-6"><label class="form-label">Restaurant name</label><input class="form-control"
+                name="name" required maxlength="120"></div>
+            <div class="col-md-6"><label class="form-label">Tagline</label><input class="form-control" name="tagline"
+                maxlength="200"></div>
+            <div class="col-md-6"><label class="form-label">Cuisine types</label><input class="form-control"
+                name="cuisine_type" placeholder="Indian, Chinese" required></div>
+            <div class="col-md-6"><label class="form-label">Phone</label><input class="form-control" name="phone"
+                required></div>
+            <div class="col-12"><label class="form-label">Description</label><textarea class="form-control"
+                name="description" rows="2" required maxlength="1000"></textarea></div>
+            <div class="col-md-8"><label class="form-label">Street address</label><input class="form-control"
+                name="address" required maxlength="255"></div>
+            <div class="col-md-4"><label class="form-label">City</label><input class="form-control" name="city"
+                value="Bangalore" required></div>
+            <div class="col-md-8"><label class="form-label">Image URL</label><input class="form-control" type="url"
+                name="image_url" required maxlength="500"></div>
+            <div class="col-md-4"><label class="form-label">Delivery time (minutes)</label><input class="form-control"
+                type="number" name="delivery_time_mins" min="1" max="240" value="30" required></div>
+            <div class="col-md-4"><label class="form-label">Cost for two (₹)</label><input class="form-control"
+                type="number" name="cost_for_two" min="0" step="0.01" value="300" required></div>
+            <div class="col-md-4 d-flex align-items-end pb-2">
+              <div class="form-check"><input class="form-check-input" type="checkbox" name="is_pure_veg"
+                  id="restaurantPureVeg"><label class="form-check-label" for="restaurantPureVeg">Pure vegetarian
+                  kitchen</label></div>
+            </div>
+            <div class="col-12 d-flex gap-2"><button id="restaurantSaveButton" class="btn btn-primary-orange"
+                type="submit">Save Restaurant</button><button class="btn btn-outline-secondary" type="button"
+                onclick="startNewRestaurant()">Clear / Add New</button></div>
+          </form>
+        </div>
+      </div>
+
+      <!-- TAB 1: OVERVIEW -->
+      <div id="tab-overview" class="tab-pane active">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h4 class="fw-bold mb-1">Restaurant Analytics & KPI Overview</h4>
+            <p class="text-muted small mb-0">Live database metrics for Spice Garden</p>
+          </div>
+          <button class="btn btn-outline-dark btn-sm rounded-pill" onclick="loadOverviewData()">
+            <i class="bi bi-arrow-clockwise me-1"></i> Refresh Data
+          </button>
+        </div>
+
+        <!-- KPI Cards Grid -->
+        <div class="row g-3 mb-4">
+          <div class="col-xl-2 col-md-4 col-6">
+            <div class="stat-card">
+              <div>
+                <div class="text-muted small">Total Orders</div>
+                <h3 class="fw-bold mb-0 mt-1" id="kpiTotalOrders">---</h3>
+              </div>
+              <div class="stat-icon bg-primary bg-opacity-10 text-primary"><i class="bi bi-receipt"></i></div>
+            </div>
+          </div>
+
+          <div class="col-xl-2 col-md-4 col-6">
+            <div class="stat-card">
+              <div>
+                <div class="text-muted small">Total Revenue</div>
+                <h3 class="fw-bold brand-orange mb-0 mt-1" id="kpiTotalRevenue">₹---</h3>
+              </div>
+              <div class="stat-icon bg-warning bg-opacity-10 text-warning"><i class="bi bi-currency-rupee"></i></div>
+            </div>
+          </div>
+
+          <div class="col-xl-2 col-md-4 col-6">
+            <div class="stat-card">
+              <div>
+                <div class="text-muted small">Active Orders</div>
+                <h3 class="fw-bold text-success mb-0 mt-1" id="kpiActiveOrders">---</h3>
+              </div>
+              <div class="stat-icon bg-success bg-opacity-10 text-success"><i class="bi bi-activity"></i></div>
+            </div>
+          </div>
+
+          <div class="col-xl-2 col-md-4 col-6">
+            <div class="stat-card">
+              <div>
+                <div class="text-muted small">Menu Dishes</div>
+                <h3 class="fw-bold mb-0 mt-1" id="kpiMenuItems">---</h3>
+              </div>
+              <div class="stat-icon bg-info bg-opacity-10 text-info"><i class="bi bi-card-list"></i></div>
+            </div>
+          </div>
+
+          <div class="col-xl-2 col-md-4 col-6">
+            <div class="stat-card">
+              <div>
+                <div class="text-muted small">Low Stock Items</div>
+                <h3 class="fw-bold text-danger mb-0 mt-1" id="kpiLowStock">---</h3>
+              </div>
+              <div class="stat-icon bg-danger bg-opacity-10 text-danger"><i class="bi bi-exclamation-octagon"></i></div>
+            </div>
+          </div>
+
+          <div class="col-xl-2 col-md-4 col-6">
+            <div class="stat-card">
+              <div>
+                <div class="text-muted small">Total Customers</div>
+                <h3 class="fw-bold mb-0 mt-1" id="kpiCustomerCount">---</h3>
+              </div>
+              <div class="stat-icon bg-dark bg-opacity-10 text-dark"><i class="bi bi-people"></i></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Summary & Quick Actions Row -->
+        <div class="row g-4 mb-4">
+          <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+              <h5 class="fw-bold mb-3">Live Incoming Orders</h5>
+              <div id="overviewLiveOrdersTable" class="table-responsive">
+                <!-- Dynamic table -->
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+              <h5 class="fw-bold mb-3 text-danger"><i class="bi bi-bell-fill me-2"></i>Critical Inventory Alerts</h5>
+              <div id="overviewLowStockList" class="d-flex flex-column gap-2">
+                <!-- Dynamic low stock list -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: ORDERS MANAGEMENT -->
+      <div id="tab-orders" class="tab-pane" hidden>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h4 class="fw-bold mb-1">Incoming & Active Orders</h4>
+            <p class="text-muted small mb-0">Accept, reject, and update live orders</p>
+          </div>
+          <div class="d-flex gap-2">
+            <select id="adminOrderStatusFilter" class="form-select form-select-sm" onchange="loadAdminOrders()">
+              <option value="all">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="preparing">Preparing</option>
+              <option value="ready">Ready</option>
+              <option value="out_for_delivery">Out For Delivery</option>
+              <option value="delivered">Delivered</option>
+            </select>
+            <button class="btn btn-outline-dark btn-sm" onclick="loadAdminOrders()"><i
+                class="bi bi-arrow-clockwise"></i></button>
+          </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light small text-uppercase">
+                <tr>
+                  <th>Order #</th>
+                  <th>Customer</th>
+                  <th>Items</th>
+                  <th>Total</th>
+                  <th>Priority</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminOrdersTableBody">
+                <!-- Dynamic rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: MENU MANAGEMENT -->
+      <div id="tab-menu" class="tab-pane" hidden>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h4 class="fw-bold mb-1">Restaurant Menu Management</h4>
+            <p class="text-muted small mb-0">Manage food items, pricing, images, and live availability</p>
+          </div>
+          <button class="btn btn-primary-orange btn-sm" data-bs-toggle="modal" data-bs-target="#addDishModal">
+            <i class="bi bi-plus-lg me-1"></i> Add New Dish
+          </button>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light small text-uppercase">
+                <tr>
+                  <th>Dish</th>
+                  <th>Category</th>
+                  <th>Price</th>
+                  <th>Prep Time</th>
+                  <th>Availability</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminMenuTableBody">
+                <!-- Dynamic rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: SMART INVENTORY & WASTE -->
+      <div id="tab-inventory" class="tab-pane" hidden>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h4 class="fw-bold mb-1">Smart Ingredient Inventory & Food Waste Prevention</h4>
+            <p class="text-muted small mb-0">Automatic order deductions, low-stock threshold triggers, and shelf-life
+              tracking</p>
+          </div>
+          <button class="btn btn-outline-dark btn-sm rounded-pill" onclick="loadInventoryTab()">
+            <i class="bi bi-arrow-clockwise me-1"></i> Refresh Stock
+          </button>
+        </div>
+
+        <div class="row g-4 mb-4">
+          <!-- Low Stock Thresholds -->
+          <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+              <h5 class="fw-bold mb-3 text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>Low-Stock Restock
+                Alerts</h5>
+              <div id="inventoryAlertsList" class="d-flex flex-column gap-3">
+                <!-- Dynamic items -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Expiry & Waste Reduction -->
+          <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+              <h5 class="fw-bold mb-3 text-warning"><i class="bi bi-hourglass-bottom me-2"></i>Expiry & Shelf-Life Watch
+                (< 3 Days)</h5>
+                  <div id="inventoryExpiryList" class="d-flex flex-column gap-3">
+                    <!-- Dynamic items -->
+                  </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Full Inventory Table -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+          <h5 class="fw-bold mb-3">All Monitored Ingredients</h5>
+          <div id="inventoryTableContainer" class="table-responsive">
+            <!-- Dynamic table -->
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 5: REVENUE & PEAK HOURS ANALYTICS (Chart.js) -->
+      <div id="tab-analytics" class="tab-pane" hidden>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h4 class="fw-bold mb-1">Sales & Operational Analytics</h4>
+            <p class="text-muted small mb-0">Generated directly from SQL database transaction logs</p>
+          </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+          <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0">Revenue Analytics (Last 7 Days)</h5>
+                <span class="badge bg-success-subtle text-success">Daily Aggregation</span>
+              </div>
+              <div class="chart-panel chart-panel-tall">
+                <canvas id="dailyRevenueChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+              <h5 class="fw-bold mb-3">Peak Ordering Hours</h5>
+              <div class="chart-panel chart-panel-tall">
+                <canvas id="peakHoursChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+              <h5 class="fw-bold mb-3">Best-Selling Dishes</h5>
+              <div class="chart-panel chart-panel-short">
+                <canvas id="bestsellersChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+              <h5 class="fw-bold mb-3">Monthly Growth Trends</h5>
+              <div class="chart-panel chart-panel-short">
+                <canvas id="monthlyGrowthChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 6: AI DEMAND FORECAST -->
+      <div id="tab-demand" class="tab-pane" hidden>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <span class="badge bg-dark text-white rounded-pill mb-1"><i class="bi bi-cpu text-warning me-1"></i>
+              SCIKIT-LEARN POWERED</span>
+            <h4 class="fw-bold mb-1">AI Food Demand Prediction</h4>
+            <p class="text-muted small mb-0">RandomForestRegressor forecasting tomorrow's demand and optimal prep
+              buffers</p>
+          </div>
+          <button class="btn btn-outline-dark btn-sm rounded-pill" onclick="loadDemandForecast()">
+            <i class="bi bi-arrow-clockwise me-1"></i> Re-Train & Forecast
+          </button>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light small text-uppercase">
+                <tr>
+                  <th>Dish Name</th>
+                  <th>Category</th>
+                  <th>Current Price</th>
+                  <th>Predicted Demand (Tomorrow)</th>
+                  <th>Recommended Prep Qty</th>
+                  <th>Estimated Peak Hour</th>
+                  <th>Confidence</th>
+                </tr>
+              </thead>
+              <tbody id="demandForecastTableBody">
+                <!-- Dynamic rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Add New Dish Modal -->
+  <div class="modal fade" id="addDishModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content rounded-4 border-0">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold">Add New Food Item</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="addDishForm">
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Dish Name</label>
+              <input type="text" id="dishName" class="form-control" required placeholder="e.g. Mysore Masala Dosa">
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label small fw-bold">Price (₹)</label>
+                <input type="number" id="dishPrice" class="form-control" required min="1" step="0.5" value="120">
+              </div>
+              <div class="col-6">
+                <label class="form-label small fw-bold">Discount Price (Optional)</label>
+                <input type="number" id="dishDiscount" class="form-control" min="1" step="0.5">
+              </div>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label small fw-bold">Category</label>
+                <select id="dishCategory" class="form-select">
+                  <option value="1">South Indian</option>
+                  <option value="2">North Indian</option>
+                  <option value="3">Pizza</option>
+                  <option value="4">Burgers</option>
+                  <option value="5">Biryani</option>
+                </select>
+              </div>
+              <div class="col-6">
+                <label class="form-label small fw-bold">Prep Time (Mins)</label>
+                <input type="number" id="dishPrepTime" class="form-control" required min="1" value="15">
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Image URL</label>
+              <input type="url" id="dishImageUrl" class="form-control" required
+                value="https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=600&auto=format&fit=crop&q=80">
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Description</label>
+              <textarea id="dishDescription" class="form-control" rows="2"
+                placeholder="Describe the flavors and ingredients..."></textarea>
+            </div>
+            <div class="form-check form-switch mb-3">
+              <input class="form-check-input" type="checkbox" id="dishIsVeg" checked>
+              <label class="form-check-label small fw-bold text-success" for="dishIsVeg">100% Vegetarian</label>
+            </div>
+            <button type="submit" class="btn btn-primary-orange w-100 py-2">Create Menu Item</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/websocket.js"></script>
+
+  <script>
+    let dailyChart = null;
+    let peakChart = null;
+    let bestsellersChart = null;
+    let monthlyChart = null;
+    let selectedRestaurantId = null;
+    let editingRestaurantId = null;
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      // Guard: Restaurant Admin or Super Admin only
+      if (!Auth.checkAuthGuard(["restaurant_admin", "super_admin"])) return;
+
+      await loadManagedRestaurants();
+      if (selectedRestaurantId) refreshRestaurantData();
+      else switchTab("restaurants", document.querySelector('[href="#restaurants"]'));
+      document.getElementById("restaurantForm").addEventListener("submit", saveRestaurant);
+
+      // Listen to real-time events
+      WSClient.addListener((event) => {
+        if (event.event === "NEW_ORDER" || event.event === "ORDER_STATUS_CHANGED") {
+          loadOverviewData();
+          loadAdminOrders();
+        }
+      });
+
+      // Handle Add Dish Form
+      document.getElementById("addDishForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const payload = {
+          restaurant_id: selectedRestaurantId,
+          category_id: parseInt(document.getElementById("dishCategory").value),
+          name: document.getElementById("dishName").value.trim(),
+          description: document.getElementById("dishDescription").value.trim() || "Delicious chef prepared food.",
+          image_url: document.getElementById("dishImageUrl").value.trim(),
+          price: parseFloat(document.getElementById("dishPrice").value),
+          discount_price: document.getElementById("dishDiscount").value ? parseFloat(document.getElementById("dishDiscount").value) : null,
+          prep_time_minutes: parseInt(document.getElementById("dishPrepTime").value),
+          is_veg: document.getElementById("dishIsVeg").checked
+        };
+
+        try {
+          await API.request("/api/menu/item", { method: "POST", body: JSON.stringify(payload) });
+          Auth.showToast("New dish added to menu!", "success");
+          bootstrap.Modal.getInstance(document.getElementById("addDishModal")).hide();
+          document.getElementById("addDishForm").reset();
+          loadAdminMenu();
+        } catch (err) {
+          Auth.showToast(err.message, "danger");
+        }
+      });
+    });
+
+    async function loadManagedRestaurants() {
+      const select = document.getElementById("managedRestaurantSelect");
+      try {
+        const restaurants = await API.getManagedRestaurants();
+        select.innerHTML = restaurants.map(r => `<option value="${r.id}">${r.name}</option>`).join("");
+        if (restaurants.length) {
+          selectedRestaurantId = restaurants.some(r => r.id === Number(selectedRestaurantId))
+            ? Number(selectedRestaurantId)
+            : restaurants[0].id;
+          select.value = selectedRestaurantId;
+          const current = restaurants.find(r => r.id === selectedRestaurantId);
+          document.getElementById("adminRestaurantLabel").textContent = current ? `${current.name} • ${current.city}` : "";
+          populateRestaurantForm(current);
+        } else {
+          selectedRestaurantId = null;
+          select.innerHTML = '<option value="">No restaurants yet</option>';
+          document.getElementById("adminRestaurantLabel").textContent = "Add your first restaurant";
+          startNewRestaurant();
+        }
+        return restaurants;
+      } catch (err) {
+        Auth.showToast(err.message || "Could not load restaurants", "danger");
+        select.innerHTML = '<option value="">Unable to load restaurants</option>';
+        return [];
+      }
+    }
+
+    function refreshRestaurantData() {
+      if (!selectedRestaurantId) return;
+      loadOverviewData();
+      loadAdminOrders();
+      loadAdminMenu();
+      loadInventoryTab();
+      loadAnalyticsCharts();
+      loadDemandForecast();
+    }
+
+    function selectManagedRestaurant(id) {
+      selectedRestaurantId = Number(id) || null;
+      const option = [...document.getElementById("managedRestaurantSelect").options]
+        .find(item => Number(item.value) === selectedRestaurantId);
+      if (option) document.getElementById("adminRestaurantLabel").textContent = option.textContent;
+      API.getManagedRestaurants().then(items => {
+        const restaurant = items.find(item => item.id === selectedRestaurantId);
+        if (restaurant) {
+          document.getElementById("adminRestaurantLabel").textContent = `${restaurant.name} • ${restaurant.city}`;
+          populateRestaurantForm(restaurant);
+        }
+      });
+      refreshRestaurantData();
+    }
+
+    function startNewRestaurant() {
+      editingRestaurantId = null;
+      document.getElementById("restaurantForm").reset();
+      document.getElementById("restaurantSaveButton").textContent = "Create Restaurant";
+      document.getElementById("managedRestaurantSelect").value = "";
+    }
+
+    function populateRestaurantForm(restaurant) {
+      if (!restaurant) return;
+      editingRestaurantId = restaurant.id;
+      const form = document.getElementById("restaurantForm");
+      for (const key of ["name", "tagline", "description", "cuisine_type", "address", "city", "phone", "image_url", "delivery_time_mins", "cost_for_two"]) {
+        form.elements[key].value = restaurant[key] ?? "";
+      }
+      form.elements.is_pure_veg.checked = Boolean(restaurant.is_pure_veg);
+      document.getElementById("restaurantSaveButton").textContent = "Save Changes";
+    }
+
+    async function saveRestaurant(event) {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const payload = Object.fromEntries(new FormData(form).entries());
+      payload.is_pure_veg = form.elements.is_pure_veg.checked;
+      payload.delivery_time_mins = Number(payload.delivery_time_mins);
+      payload.cost_for_two = Number(payload.cost_for_two);
+      const wasEditing = Boolean(editingRestaurantId);
+      try {
+        const saved = wasEditing
+          ? await API.updateRestaurant(editingRestaurantId, payload)
+          : await API.createRestaurant(payload);
+        selectedRestaurantId = saved.id;
+        await loadManagedRestaurants();
+        document.getElementById("managedRestaurantSelect").value = saved.id;
+        Auth.showToast(wasEditing ? "Restaurant details updated" : "Restaurant created", "success");
+        refreshRestaurantData();
+      } catch (err) {
+        Auth.showToast(err.message || "Could not save restaurant", "danger");
+      }
+    }
+
+    function switchTab(tabId, el) {
+      document.querySelectorAll(".tab-pane").forEach(p => { p.hidden = true; p.classList.remove("active"); });
+      document.querySelectorAll(".sidebar-link").forEach(l => l.classList.remove("active"));
+      const target = document.getElementById(`tab-${tabId}`);
+      target.hidden = false;
+      target.classList.add("active");
+      el.classList.add("active");
+    }
+
+    async function loadOverviewData() {
+      try {
+        const stats = await API.getAdminStats(selectedRestaurantId);
+        document.getElementById("kpiTotalOrders").textContent = stats.total_orders;
+        document.getElementById("kpiTotalRevenue").textContent = `₹${stats.total_revenue.toFixed(2)}`;
+        document.getElementById("kpiActiveOrders").textContent = stats.active_orders;
+        document.getElementById("kpiMenuItems").textContent = stats.total_menu_items;
+        document.getElementById("kpiLowStock").textContent = stats.low_stock_items;
+        document.getElementById("kpiCustomerCount").textContent = stats.customer_count;
+
+        // Load active orders mini table
+        const orders = await API.getAdminOrders(selectedRestaurantId, "all");
+        const activeOrders = orders.filter(o => ["pending", "confirmed", "preparing", "ready", "out_for_delivery"].includes(o.status)).slice(0, 5);
+
+        const tableContainer = document.getElementById("overviewLiveOrdersTable");
+        if (activeOrders.length === 0) {
+          tableContainer.innerHTML = `<div class="text-muted small py-3">No active orders at the moment.</div>`;
+        } else {
+          tableContainer.innerHTML = `
+            <table class="table table-sm align-middle">
+              <thead>
+                <tr>
+                  <th>Order #</th>
+                  <th>Customer</th>
+                  <th>Items</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${activeOrders.map(o => `
+                  <tr>
+                    <td><strong>#${o.order_number}</strong></td>
+                    <td>${o.customer_name}</td>
+                    <td>${o.items.map(i => `${i.quantity}x ${i.name}`).join(', ')}</td>
+                    <td class="brand-orange fw-bold">₹${o.total_amount.toFixed(2)}</td>
+                    <td><span class="badge ${o.status === 'pending' ? 'bg-warning text-dark' : 'bg-primary'} text-uppercase">${o.status}</span></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `;
+        }
+      } catch (err) {
+        console.error("Overview error:", err);
+      }
+    }
+
+    async function loadAdminOrders() {
+      const filter = document.getElementById("adminOrderStatusFilter")?.value || "all";
+      const tbody = document.getElementById("adminOrdersTableBody");
+      try {
+        const orders = await API.getAdminOrders(selectedRestaurantId, filter);
+        if (orders.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">No orders found.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = orders.map(o => `
+          <tr>
+            <td><strong>#${o.order_number}</strong><div class="small text-muted">${o.created_at}</div></td>
+            <td>${o.customer_name}<div class="small text-muted">${o.customer_phone || ''}</div></td>
+            <td><small>${o.items.map(i => `${i.quantity}x ${i.name}`).join('<br>')}</small></td>
+            <td class="fw-bold brand-orange">₹${o.total_amount.toFixed(2)}</td>
+            <td><span class="badge bg-dark">Score: ${o.priority_score.toFixed(1)}</span></td>
+            <td>
+              <span class="badge ${o.status === 'delivered' ? 'bg-success' : o.status === 'cancelled' ? 'bg-danger' : 'bg-warning text-dark'} text-uppercase">
+                ${o.status}
+              </span>
+            </td>
+            <td>
+              <div class="dropdown">
+                <button class="btn btn-sm btn-outline-dark dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                  Action
+                </button>
+                <ul class="dropdown-menu">
+                  ${o.status === 'pending' ? `<li><button class="dropdown-item" onclick="updateOrderStatus(${o.id}, 'confirmed')">Accept Order</button></li><li><button class="dropdown-item text-danger" onclick="updateOrderStatus(${o.id}, 'cancelled')">Cancel / Reject</button></li>` : ''}
+                  ${o.status === 'confirmed' ? `<li><button class="dropdown-item" onclick="updateOrderStatus(${o.id}, 'preparing')">Set Preparing</button></li><li><button class="dropdown-item text-danger" onclick="updateOrderStatus(${o.id}, 'cancelled')">Cancel / Reject</button></li>` : ''}
+                  ${o.status === 'preparing' ? `<li><button class="dropdown-item" onclick="updateOrderStatus(${o.id}, 'ready')">Mark Ready</button></li><li><button class="dropdown-item text-danger" onclick="updateOrderStatus(${o.id}, 'cancelled')">Cancel / Reject</button></li>` : ''}
+                  ${o.status === 'ready' ? `<li><button class="dropdown-item text-danger" onclick="updateOrderStatus(${o.id}, 'cancelled')">Cancel Order</button></li>` : ''}
+                  ${!['pending', 'confirmed', 'preparing', 'ready'].includes(o.status) ? '<li><span class="dropdown-item-text text-muted">No actions available</span></li>' : ''}
+                </ul>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-danger">${err.message}</td></tr>`;
+      }
+    }
+
+    async function updateOrderStatus(orderId, status) {
+      try {
+        await API.updateOrderStatus(orderId, status, `Admin updated status to ${status}`);
+        Auth.showToast(`Order status updated to ${status}`, "success");
+        loadAdminOrders();
+        loadOverviewData();
+      } catch (err) {
+        Auth.showToast(err.message, "danger");
+      }
+    }
+
+    async function loadAdminMenu() {
+      const tbody = document.getElementById("adminMenuTableBody");
+      try {
+        const items = await API.getMenuItems({ restaurant_id: selectedRestaurantId });
+        tbody.innerHTML = items.map(item => `
+          <tr>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <img src="${item.image_url}" alt="${item.name}" class="rounded-2 admin-menu-thumbnail">
+                <div>
+                  <div class="d-flex align-items-center gap-1">
+                    <span class="${item.is_veg ? 'veg-indicator' : 'nonveg-indicator'}"></span>
+                    <strong>${item.name}</strong>
+                  </div>
+                  <div class="small text-muted line-clamp-1 admin-menu-description">${item.description}</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="badge bg-light text-dark border">${item.category ? item.category.name : 'Main'}</span></td>
+            <td class="fw-bold brand-orange">₹${item.price.toFixed(2)}</td>
+            <td>${item.prep_time_minutes}m</td>
+            <td>
+              <span class="badge ${item.is_available ? 'bg-success' : 'bg-danger'}">
+                ${item.is_available ? 'Available' : 'Out of Stock'}
+              </span>
+            </td>
+            <td>
+              <button class="btn btn-sm btn-outline-dark me-1" onclick="toggleItemAvail(${item.id})">
+                <i class="bi bi-power"></i> Toggle
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-danger">${err.message}</td></tr>`;
+      }
+    }
+
+    async function toggleItemAvail(itemId) {
+      try {
+        const res = await API.toggleMenuItemAvailability(itemId);
+        Auth.showToast(res.message, "info");
+        loadAdminMenu();
+      } catch (err) {
+        Auth.showToast(err.message, "danger");
+      }
+    }
+
+    async function loadInventoryTab() {
+      try {
+        const inv = await API.getInventory(selectedRestaurantId);
+
+        // Alerts List
+        const alertsContainer = document.getElementById("inventoryAlertsList");
+        const overviewAlerts = document.getElementById("overviewLowStockList");
+        if (inv.low_stock_alerts.length === 0) {
+          alertsContainer.innerHTML = `<div class="text-success small"><i class="bi bi-check-circle me-1"></i>All ingredient stock levels are optimal.</div>`;
+          overviewAlerts.innerHTML = `<div class="text-success small">Stock levels normal.</div>`;
+        } else {
+          const html = inv.low_stock_alerts.map(a => `
+            <div class="p-3 border rounded-3 bg-light d-flex justify-content-between align-items-center">
+              <div>
+                <strong class="d-block">${a.name}</strong>
+                <span class="small text-danger fw-bold">Stock: ${a.current_stock} ${a.unit} (Reorder level: ${a.reorder_level} ${a.unit})</span>
+              </div>
+              <button class="btn btn-sm btn-outline-danger" onclick="restockItemPrompt(${a.id}, '${a.name}')">
+                Restock +${a.recommended_order} ${a.unit}
+              </button>
+            </div>
+          `).join('');
+          alertsContainer.innerHTML = html;
+          overviewAlerts.innerHTML = html;
+        }
+
+        // Expiry List
+        const expiryContainer = document.getElementById("inventoryExpiryList");
+        if (inv.expiry_warnings.length === 0) {
+          expiryContainer.innerHTML = `<div class="text-muted small">No items nearing expiry.</div>`;
+        } else {
+          expiryContainer.innerHTML = inv.expiry_warnings.map(e => `
+            <div class="p-3 border border-warning rounded-3 bg-warning bg-opacity-10">
+              <div class="d-flex justify-content-between mb-1">
+                <strong>${e.name} (${e.current_stock} ${e.unit})</strong>
+                <span class="badge bg-danger">${e.days_remaining} Days Left</span>
+              </div>
+              <div class="small text-muted mb-2">Financial Risk: <strong>${e.financial_risk}</strong></div>
+              <div class="small text-dark bg-white p-2 rounded-2 border">
+                <i class="bi bi-lightbulb text-warning me-1"></i><strong>AI Prevention:</strong> ${e.ai_prevention_action}
+              </div>
+            </div>
+          `).join('');
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function restockItemPrompt(id, name) {
+      const qty = prompt(`Enter quantity to add for ${name} (e.g. 10):`, "10");
+      if (qty && !isNaN(qty)) {
+        try {
+          await API.restockIngredient(id, parseFloat(qty));
+          Auth.showToast(`Successfully restocked ${name}!`, "success");
+          loadInventoryTab();
+          loadOverviewData();
+        } catch (err) {
+          Auth.showToast(err.message, "danger");
+        }
+      }
+    }
+
+    async function loadAnalyticsCharts() {
+      try {
+        const rev = await API.getRevenueAnalytics(selectedRestaurantId);
+        const peak = await API.getPeakHoursAnalytics(selectedRestaurantId);
+        const best = await API.getBestsellersAnalytics(selectedRestaurantId);
+
+        // Daily Chart
+        const ctxDaily = document.getElementById("dailyRevenueChart").getContext("2d");
+        if (dailyChart) dailyChart.destroy();
+        dailyChart = new Chart(ctxDaily, {
+          type: "line",
+          data: {
+            labels: rev.daily.labels,
+            datasets: [{
+              label: "Daily Revenue (₹)",
+              data: rev.daily.data,
+              borderColor: "#FF6B00",
+              backgroundColor: "rgba(255, 107, 0, 0.1)",
+              fill: true,
+              tension: 0.3,
+              borderWidth: 3
+            }]
+          },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        // Peak Hours Chart
+        const ctxPeak = document.getElementById("peakHoursChart").getContext("2d");
+        if (peakChart) peakChart.destroy();
+        peakChart = new Chart(ctxPeak, {
+          type: "bar",
+          data: {
+            labels: peak.labels,
+            datasets: [{
+              label: "Orders per Hour",
+              data: peak.data,
+              backgroundColor: "#171717",
+              borderRadius: 6
+            }]
+          },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        // Best-sellers Chart
+        const ctxBest = document.getElementById("bestsellersChart").getContext("2d");
+        if (bestsellersChart) bestsellersChart.destroy();
+        bestsellersChart = new Chart(ctxBest, {
+          type: "doughnut",
+          data: {
+            labels: best.labels,
+            datasets: [{
+              data: best.order_counts,
+              backgroundColor: ["#FF6B00", "#10B981", "#3B82F6", "#F59E0B", "#8B5CF6", "#EC4899", "#6B7280"]
+            }]
+          },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        // Monthly Trends
+        const ctxMonthly = document.getElementById("monthlyGrowthChart").getContext("2d");
+        if (monthlyChart) monthlyChart.destroy();
+        monthlyChart = new Chart(ctxMonthly, {
+          type: "bar",
+          data: {
+            labels: rev.monthly.labels,
+            datasets: [{
+              label: "Monthly GMV (₹)",
+              data: rev.monthly.data,
+              backgroundColor: "#FF6B00"
+            }]
+          },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+      } catch (err) {
+        console.error("Analytics chart error:", err);
+      }
+    }
+
+    async function loadDemandForecast() {
+      const tbody = document.getElementById("demandForecastTableBody");
+      try {
+        const data = await API.getDemandForecast(selectedRestaurantId);
+        tbody.innerHTML = data.map(d => `
+          <tr>
+            <td><strong>${d.item_name}</strong></td>
+            <td><span class="badge bg-light text-dark border">${d.category}</span></td>
+            <td>₹${d.current_price.toFixed(2)}</td>
+            <td><span class="fw-bold brand-orange fs-6">${d.predicted_demand_next_day} units</span></td>
+            <td><span class="badge bg-success-subtle text-success fs-6">${d.recommended_prep_qty} units buffer</span></td>
+            <td><small class="text-muted">${d.peak_hour}</small></td>
+            <td><span class="badge bg-dark">${Math.round(d.confidence_score * 100)}% Match</span></td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-danger">${err.message}</td></tr>`;
+      }
+    }
+  </script>
+</body>
+
+</html>

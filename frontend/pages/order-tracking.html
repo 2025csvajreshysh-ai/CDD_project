@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Order Tracking – AI Foodie</title>
+  <link rel="icon" href="/static/assets/aifoodie-mark.svg" type="image/svg+xml">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/style.css?v=20261118-visual-refresh">
+</head>
+<body class="bg-light">
+
+  <nav class="navbar navbar-custom sticky-top">
+    <div class="container">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+        <img class="brand-logo" src="/static/assets/aifoodie-mark.svg" alt="" aria-hidden="true">
+        <span class="brand-font fs-4 text-dark">AI <span class="brand-orange">Foodie</span></span>
+      </a>
+      <div class="d-flex align-items-center gap-2">
+        <a href="/pages/customer-dashboard.html" class="btn btn-outline-dark btn-sm">My Dashboard</a>
+        <div id="navAuthContainer"></div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container py-5">
+    <div class="row gy-4">
+      <!-- Left: Tracking Timeline & ETA -->
+      <div class="col-lg-7">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <span class="badge bg-success-subtle text-success border border-success mb-1" id="orderStatusBadge">Order Active</span>
+              <h4 class="fw-bold mb-0" id="orderNumberDisplay">Order #---</h4>
+            </div>
+            <div class="text-end">
+              <span class="text-muted small">Estimated Arrival</span>
+              <h3 class="fw-bold brand-orange mb-0" id="etaDisplay">25 mins</h3>
+            </div>
+          </div>
+
+          <div class="alert alert-light border small text-muted d-flex align-items-center gap-2 py-2 mb-4">
+            <span class="spinner-grow spinner-grow-sm text-success" role="status"></span>
+            <span>Real-time WebSocket connection active. Status updates will reflect automatically.</span>
+          </div>
+
+          <!-- Step-by-Step Progress Stepper -->
+          <div class="p-3 bg-light rounded-4 mb-4">
+            <div class="tracking-step" id="step-pending">
+              <div class="tracking-icon"><i class="bi bi-receipt"></i></div>
+              <div>
+                <h6 class="fw-bold mb-0">Order Placed</h6>
+                <div class="small text-muted">Received and sent to restaurant</div>
+              </div>
+            </div>
+
+            <div class="tracking-step" id="step-confirmed">
+              <div class="tracking-icon"><i class="bi bi-check2-circle"></i></div>
+              <div>
+                <h6 class="fw-bold mb-0">Order Accepted</h6>
+                <div class="small text-muted">Restaurant confirmed and sent to kitchen</div>
+              </div>
+            </div>
+
+            <div class="tracking-step" id="step-preparing">
+              <div class="tracking-icon"><i class="bi bi-fire"></i></div>
+              <div>
+                <h6 class="fw-bold mb-0">Cooking in Kitchen</h6>
+                <div class="small text-muted">Master chefs preparing freshly with recipe standards</div>
+              </div>
+            </div>
+
+            <div class="tracking-step" id="step-ready">
+              <div class="tracking-icon"><i class="bi bi-box-seam"></i></div>
+              <div>
+                <h6 class="fw-bold mb-0">Packed & Ready</h6>
+                <div class="small text-muted">Awaiting delivery partner pickup</div>
+              </div>
+            </div>
+
+            <div class="tracking-step" id="step-out_for_delivery">
+              <div class="tracking-icon"><i class="bi bi-bicycle"></i></div>
+              <div>
+                <h6 class="fw-bold mb-0">Out for Delivery</h6>
+                <div class="small text-muted">Rider on the way to your doorstep</div>
+              </div>
+            </div>
+
+            <div class="tracking-step" id="step-delivered">
+              <div class="tracking-icon"><i class="bi bi-house-door-fill"></i></div>
+              <div>
+                <h6 class="fw-bold mb-0">Delivered</h6>
+                <div class="small text-muted">Enjoy your meal!</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Delivery Partner Card -->
+          <div class="card border rounded-3 p-3 bg-white" id="driverCard">
+            <div class="d-flex align-items-center justify-content-between">
+              <div class="d-flex align-items-center gap-3">
+                <div class="bg-info bg-opacity-10 text-info p-3 rounded-circle fs-4">
+                  <i class="bi bi-person-badge-fill"></i>
+                </div>
+                <div>
+                  <div class="small text-muted">Assigned Delivery Partner</div>
+                  <h6 class="fw-bold mb-0" id="driverName">Vikram Singh</h6>
+                  <div class="small text-success"><i class="bi bi-shield-check me-1"></i>Vaccinated & Verified</div>
+                </div>
+              </div>
+              <a href="tel:+919876543210" class="btn btn-outline-dark btn-sm rounded-pill px-3" id="driverPhoneBtn">
+                <i class="bi bi-telephone me-1"></i> Call Rider
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Interactive GPS Delivery Route Simulation Canvas & Order Items -->
+      <div class="col-lg-5">
+        <!-- Route Simulation Map -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0"><i class="bi bi-map-fill text-primary me-2"></i>Live Route Simulation</h5>
+            <span class="badge bg-dark rounded-pill">Bangalore GPS</span>
+          </div>
+
+          <div class="position-relative rounded-4 overflow-hidden border tracking-map-wrap">
+            <div id="trackingMap" class="tracking-map"></div>
+            <div class="position-absolute bottom-0 start-0 m-2 badge bg-dark bg-opacity-75 small">
+              📍 Indiranagar → Bellandur
+            </div>
+          </div>
+        </div>
+
+        <!-- Order Summary Recap -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+          <h5 class="fw-bold mb-3">Order Items</h5>
+          <div id="orderItemsSummary" class="d-flex flex-column gap-2 mb-3">
+            <!-- Dynamic items -->
+          </div>
+          <hr>
+          <div class="d-flex justify-content-between fw-bold">
+            <span>Total Paid</span>
+            <span class="brand-orange fs-5" id="orderTotalPaid">₹0.00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/cart.js"></script>
+  <script src="/js/chatbot.js"></script>
+  <script src="/js/websocket.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="/js/tracking.js"></script>
+
+  <script>
+    let currentOrderId = null;
+    let canvasAnimationId = null;
+    let riderProgress = 0.35; // 0.0 to 1.0
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      currentOrderId = parseInt(urlParams.get("order_id"));
+
+      if (!currentOrderId) {
+        // Fetch user's latest order
+        try {
+          const myOrders = await API.getMyOrders();
+          if (myOrders && myOrders.length > 0) {
+            currentOrderId = myOrders[0].id;
+          } else {
+            currentOrderId = 1; // Fallback to seeded live order
+          }
+        } catch {
+          currentOrderId = 1;
+        }
+      }
+
+      await loadOrderTracking(currentOrderId);
+
+      // Register WebSocket listener for live updates
+      WSClient.addListener((event) => {
+        if (event.order_id === currentOrderId) {
+          loadOrderTracking(currentOrderId);
+        }
+      });
+    });
+
+    async function loadOrderTracking(orderId) {
+      try {
+        const data = await API.getOrderDetails(orderId);
+        const order = data.order;
+        const items = data.items;
+        const driver = data.delivery_partner;
+
+        document.getElementById("orderNumberDisplay").textContent = `Order #${order.order_number}`;
+        document.getElementById("orderStatusBadge").textContent = order.status.toUpperCase();
+        document.getElementById("etaDisplay").textContent = `${order.estimated_delivery_minutes} mins`;
+        try {
+          const liveEta = await API.getDeliveryEta(orderId);
+          document.getElementById("etaDisplay").textContent = `${liveEta.eta_minutes} mins`;
+        } catch (etaError) {
+          console.info("Using order ETA because live ETA is not available", etaError.message);
+        }
+        document.getElementById("orderTotalPaid").textContent = `₹${order.total_amount.toFixed(2)}`;
+
+        if (driver) {
+          document.getElementById("driverName").textContent = driver.name;
+          document.getElementById("driverPhoneBtn").href = `tel:${driver.phone}`;
+        }
+
+        // Update Stepper
+        updateStepper(order.status);
+
+        // Update order items list
+        document.getElementById("orderItemsSummary").innerHTML = items.map(i => `
+          <div class="d-flex justify-content-between align-items-center small">
+            <div>
+              <span class="badge bg-light text-dark border me-1">${i.quantity}x</span>
+              <span class="fw-semibold">${i.item_name}</span>
+            </div>
+            <span class="fw-bold">₹${i.total_price.toFixed(2)}</span>
+          </div>
+        `).join('');
+
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function updateStepper(status) {
+      const steps = ["pending", "confirmed", "preparing", "ready", "out_for_delivery", "delivered"];
+      const currentIdx = steps.indexOf(status.toLowerCase());
+
+      steps.forEach((stepName, idx) => {
+        const el = document.getElementById(`step-${stepName}`);
+        if (!el) return;
+        el.classList.remove("completed", "active");
+
+        if (idx < currentIdx) {
+          el.classList.add("completed");
+        } else if (idx === currentIdx) {
+          el.classList.add("active");
+        }
+      });
+
+      // Update rider progress for canvas map
+      if (currentIdx <= 2) riderProgress = 0.15;
+      else if (currentIdx === 3) riderProgress = 0.35;
+      else if (currentIdx === 4) riderProgress = 0.70;
+      else if (currentIdx === 5) riderProgress = 1.0;
+    }
+
+    // Canvas Road Simulation
+    function startMapAnimation() {
+      const canvas = document.getElementById("trackingCanvas");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+
+      let t = 0;
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Background map grid
+        ctx.strokeStyle = "#CBD5E1";
+        ctx.lineWidth = 1;
+        for (let x = 0; x < canvas.width; x += 30) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, canvas.height);
+          ctx.stroke();
+        }
+        for (let y = 0; y < canvas.height; y += 30) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(canvas.width, y);
+          ctx.stroke();
+        }
+
+        // Winding Delivery Route Path
+        ctx.beginPath();
+        ctx.strokeStyle = "#FF6B00";
+        ctx.lineWidth = 6;
+        ctx.lineCap = "round";
+
+        const p1 = { x: 50, y: 190 };   // Restaurant Pickup
+        const p2 = { x: 140, y: 80 };
+        const p3 = { x: 260, y: 160 };
+        const p4 = { x: 350, y: 60 };   // Customer House
+
+        ctx.moveTo(p1.x, p1.y);
+        ctx.bezierCurveTo(p2.x, p2.y, p3.x, p3.y, p4.x, p4.y);
+        ctx.stroke();
+
+        // Restaurant Pin
+        ctx.fillStyle = "#1E293B";
+        ctx.beginPath();
+        ctx.arc(p1.x, p1.y, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#000";
+        ctx.font = "bold 10px sans-serif";
+        ctx.fillText("🍴 Restaurant", p1.x - 25, p1.y + 20);
+
+        // Customer House Pin
+        ctx.fillStyle = "#16A34A";
+        ctx.beginPath();
+        ctx.arc(p4.x, p4.y, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillText("🏠 Delivery", p4.x - 20, p4.y - 12);
+
+        // Rider current position interpolation
+        const u = riderProgress;
+        const rx = Math.pow(1 - u, 3) * p1.x + 3 * Math.pow(1 - u, 2) * u * p2.x + 3 * (1 - u) * Math.pow(u, 2) * p3.x + Math.pow(u, 3) * p4.x;
+        const ry = Math.pow(1 - u, 3) * p1.y + 3 * Math.pow(1 - u, 2) * u * p2.y + 3 * (1 - u) * Math.pow(u, 2) * p3.y + Math.pow(u, 3) * p4.y;
+
+        // Rider Icon Pulse
+        const pulse = Math.sin(t * 0.08) * 3;
+        ctx.fillStyle = "rgba(255, 107, 0, 0.3)";
+        ctx.beginPath();
+        ctx.arc(rx, ry, 16 + pulse, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#FF6B00";
+        ctx.beginPath();
+        ctx.arc(rx, ry, 10, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#FFF";
+        ctx.font = "10px sans-serif";
+        ctx.fillText("🛵", rx - 6, ry + 4);
+
+        t++;
+        requestAnimationFrame(draw);
+      }
+
+      draw();
+    }
+  </script>
+</body>
+</html>

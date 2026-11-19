@@ -1,0 +1,38 @@
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-aifoodie_db}
+      MYSQL_USER: ${MYSQL_USER:-aifoodie_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-aifoodie_pass}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-local_root_change_me}
+    volumes: [mysql_data:/var/lib/mysql]
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    networks: [foodie]
+  backend:
+    build: { context: ., dockerfile: backend/Dockerfile }
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: mysql+pymysql://${MYSQL_USER:-aifoodie_user}:${MYSQL_PASSWORD:-aifoodie_pass}@mysql:3306/${MYSQL_DATABASE:-aifoodie_db}
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env}
+      ENVIRONMENT: production
+      DEBUG: "False"
+    depends_on:
+      mysql: { condition: service_healthy }
+    networks: [foodie]
+  frontend:
+    build: { context: ., dockerfile: frontend/Dockerfile }
+    restart: unless-stopped
+    ports: ["80:80"]
+    depends_on: [backend]
+    networks: [foodie]
+networks:
+  foodie: { driver: bridge }
+volumes:
+  mysql_data:

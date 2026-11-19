@@ -1,0 +1,56 @@
+name: CI and Docker delivery
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ci_root
+          MYSQL_DATABASE: aifoodie_test
+          MYSQL_USER: aifoodie
+          MYSQL_PASSWORD: ci_password
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pci_root"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+    env:
+      DATABASE_URL: mysql+pymysql://aifoodie:ci_password@127.0.0.1:3306/aifoodie_test
+      SECRET_KEY: ci-only-secret-key-at-least-32-characters-long
+      ENVIRONMENT: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11', cache: pip, cache-dependency-path: requirements.txt }
+      - run: pip install -r requirements.txt pytest
+      - run: pytest backend/tests -q
+  publish:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/aifoodie-backend:latest,${{ secrets.DOCKERHUB_USERNAME }}/aifoodie-backend:${{ github.sha }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: frontend/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/aifoodie-frontend:latest,${{ secrets.DOCKERHUB_USERNAME }}/aifoodie-frontend:${{ github.sha }}

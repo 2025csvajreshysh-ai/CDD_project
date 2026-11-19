@@ -1,0 +1,38 @@
+{
+  "info": {
+    "_postman_id": "8870aab0-c045-46f8-93e3-95006a8f996a",
+    "name": "Food Ordering System",
+    "description": "Auth, AI recommendations, kitchen, inventory, and delivery API flows. Set base_url and credentials for the target environment.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8000" },
+    { "key": "token", "value": "" },
+    { "key": "email", "value": "customer@demo.com" },
+    { "key": "password", "value": "Demo@12345" },
+    { "key": "order_id", "value": "1" },
+    { "key": "restaurant_id", "value": "1" },
+    { "key": "ingredient_id", "value": "1" }
+  ],
+  "item": [
+    { "name": "Auth", "item": [
+      { "name": "Login", "event": [{ "listen": "test", "script": { "exec": ["pm.test('login succeeds', () => pm.response.to.have.status(200));", "const data = pm.response.json();", "if (data.access_token) pm.collectionVariables.set('token', data.access_token);"] } }], "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}" }, "url": "{{base_url}}/api/auth/login" } },
+      { "name": "Current user (JWT)", "event": [{ "listen": "test", "script": { "exec": ["pm.test('authenticated', () => pm.response.to.have.status(200));"] } }], "request": { "method": "GET", "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "url": "{{base_url}}/api/auth/me" } }
+    ] },
+    { "name": "AI Recommendations", "item": [
+      { "name": "Get recommendations", "event": [{ "listen": "test", "script": { "exec": ["pm.test('recommendations return JSON array', () => { pm.response.to.have.status(200); pm.expect(pm.response.json()).to.be.an('array'); });"] } }], "request": { "method": "GET", "url": "{{base_url}}/api/ai/recommendations?limit=6" } }
+    ] },
+    { "name": "Kitchen Prioritization", "item": [
+      { "name": "Kitchen queue (JWT)", "event": [{ "listen": "test", "script": { "exec": ["pm.test('queue request responds', () => pm.expect(pm.response.code).to.be.oneOf([200, 401, 403]));"] } }], "request": { "method": "GET", "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "url": "{{base_url}}/api/kitchen/queue" } }
+    ] },
+    { "name": "Inventory Alerts", "item": [
+      { "name": "Smart inventory", "event": [{ "listen": "test", "script": { "exec": ["pm.test('inventory endpoint responds', () => pm.expect(pm.response.code).to.be.oneOf([200, 401, 403]));"] } }], "request": { "method": "GET", "url": "{{base_url}}/api/ai/smart-inventory?restaurant_id={{restaurant_id}}" } },
+      { "name": "Inventory listing (JWT)", "request": { "method": "GET", "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "url": "{{base_url}}/api/admin/inventory?restaurant_id={{restaurant_id}}" } }
+    ] },
+    { "name": "Delivery Tracking", "item": [
+      { "name": "Assigned deliveries (JWT)", "request": { "method": "GET", "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "url": "{{base_url}}/api/delivery/assigned-orders" } },
+      { "name": "Dynamic ETA (JWT)", "event": [{ "listen": "test", "script": { "exec": ["pm.test('ETA response contains minutes', () => { if (pm.response.code === 200) pm.expect(pm.response.json()).to.have.property('eta_minutes'); });"] } }], "request": { "method": "GET", "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "url": "{{base_url}}/api/delivery/orders/{{order_id}}/eta" } },
+      { "name": "Order tracking locations (JWT)", "request": { "method": "GET", "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "url": "{{base_url}}/api/delivery/orders/{{order_id}}/location" } }
+    ] }
+  ]
+}

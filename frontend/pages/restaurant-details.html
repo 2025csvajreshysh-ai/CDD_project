@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Restaurant Menu | AI Foodie</title>
+  <link rel="icon" href="/static/assets/aifoodie-mark.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css?v=20261118-visual-refresh">
+</head>
+<body>
+  <header class="navbar navbar-expand-lg navbar-custom sticky-top">
+    <div class="container">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+        <img class="brand-logo" src="/static/assets/aifoodie-mark.svg" alt="" aria-hidden="true">
+        <span class="brand-font fs-4 text-dark">AI <span class="brand-orange">Foodie</span></span>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent" aria-controls="navContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navContent">
+        <nav class="navbar-nav mx-auto" aria-label="Main navigation">
+          <a class="nav-link" href="/">Home</a>
+          <a class="nav-link active" href="/pages/restaurants.html">Restaurants</a>
+          <a class="nav-link" href="/pages/cart.html">Cart</a>
+          <a class="nav-link" href="/pages/customer-dashboard.html">Dashboard</a>
+        </nav>
+        <div class="d-flex align-items-center gap-3">
+          <a href="/pages/cart.html" class="position-relative text-dark text-decoration-none p-2" aria-label="View cart">
+            <i class="bi bi-cart3 fs-4" aria-hidden="true"></i>
+            <span id="cartBadgeCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-brand-orange d-none">0</span>
+          </a>
+          <div id="navAuthContainer"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section id="restaurantHero" class="restaurant-hero" aria-labelledby="restaurantName">
+      <div class="container py-5"><div class="ui-state" role="status">Loading restaurant…</div></div>
+    </section>
+
+    <section class="container py-4 py-lg-5" aria-labelledby="menuHeader">
+      <div class="row g-4">
+        <aside class="col-lg-3">
+          <div class="card border-0 shadow-sm rounded-4 p-3 p-lg-4 menu-filter-panel">
+            <h2 class="h5 fw-bold mb-3">Find your meal</h2>
+            <label class="form-label small fw-semibold" for="menuItemSearch">Search menu</label>
+            <input type="search" id="menuItemSearch" class="form-control mb-3" placeholder="Dish, ingredient…">
+
+            <label class="form-label small fw-semibold" for="dietaryFilter">Dietary preference</label>
+            <select id="dietaryFilter" class="form-select mb-3">
+              <option value="any">No preference</option>
+              <option value="vegetarian">Vegetarian</option>
+              <option value="vegan">Vegan</option>
+              <option value="jain">Jain</option>
+            </select>
+
+            <label class="form-label small fw-semibold" for="allergenFilter">Avoid these allergens</label>
+            <input type="text" id="allergenFilter" class="form-control" placeholder="e.g. peanuts, dairy">
+            <div class="form-text mb-3">Separate terms with commas. Matches use menu ingredients and declared allergens.</div>
+
+            <label class="form-label small fw-semibold" for="safetyFilter">Show</label>
+            <select id="safetyFilter" class="form-select mb-3">
+              <option value="all">All menu items</option>
+              <option value="hide-unsuitable">Hide unsuitable items</option>
+              <option value="suitable">Suitable only</option>
+              <option value="unsuitable">Unsuitable only</option>
+            </select>
+
+            <div class="form-check form-switch mb-3">
+              <input class="form-check-input" type="checkbox" id="vegFilterSwitch">
+              <label class="form-check-label small fw-semibold text-success" for="vegFilterSwitch">Vegetarian only</label>
+            </div>
+
+            <hr>
+            <h3 class="small fw-bold text-muted text-uppercase mb-2">Categories</h3>
+            <div id="categoryTabs" class="d-flex flex-column gap-1" aria-label="Menu categories"></div>
+          </div>
+        </aside>
+
+        <section class="col-lg-9" aria-labelledby="menuHeader">
+          <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+            <div>
+              <span class="kds-eyebrow text-warning">MADE TO ORDER</span>
+              <h1 class="h3 fw-bold mb-0" id="menuHeader">Full menu</h1>
+            </div>
+            <span class="text-muted small" id="menuCount" role="status"></span>
+          </div>
+          <p class="small text-muted mb-3"><i class="bi bi-info-circle me-1"></i>Safety labels reflect the information provided in the menu. Always confirm severe allergies with the restaurant.</p>
+          <div class="row g-3" id="menuItemsGrid" aria-live="polite" aria-busy="true">
+            <div class="col-12"><div class="ui-state" role="status"><span class="spinner-border spinner-border-sm" aria-hidden="true"></span> Loading menu…</div></div>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <footer class="py-4 bg-dark text-secondary mt-auto">
+    <div class="container text-center small">© 2026 AI Foodie · Smart food, clearer choices.</div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/cart.js"></script>
+  <script src="/js/chatbot.js"></script>
+  <script src="/js/websocket.js"></script>
+  <script src="/js/ui.js"></script>
+  <script src="/js/restaurant-details.js"></script>
+</body>
+</html>

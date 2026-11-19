@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Super Admin Platform Portal – AI Foodie</title>
+  <link rel="icon" href="/static/assets/aifoodie-mark.svg" type="image/svg+xml">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/style.css?v=20261118-visual-refresh">
+</head>
+<body class="bg-light">
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-custom sticky-top px-3">
+    <div class="container-fluid">
+      <div class="d-flex align-items-center gap-3">
+        <a class="navbar-brand d-flex align-items-center gap-2 mb-0" href="/">
+          <img class="brand-logo" src="/static/assets/aifoodie-mark.svg" alt="" aria-hidden="true">
+          <span class="brand-font fs-5 text-dark">AI Foodie <span class="badge bg-dark text-white ms-1">SUPER ADMIN</span></span>
+        </a>
+      </div>
+
+      <div class="d-flex align-items-center gap-3">
+        <div class="text-end d-none d-md-block">
+          <div class="fw-bold">Kavita Rao</div>
+          <div class="small text-muted">Platform Super Administrator</div>
+        </div>
+        <button class="btn btn-outline-danger btn-sm" onclick="API.logout()">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container py-4">
+    <!-- Header & Platform KPI Cards -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h3 class="fw-bold mb-1">Platform Governance & Overview</h3>
+        <p class="text-muted small mb-0">System-wide monitoring of users, restaurants, orders and marketplace revenue</p>
+      </div>
+      <button class="btn btn-outline-dark btn-sm rounded-pill" onclick="loadSuperAdminData()">
+        <i class="bi bi-arrow-clockwise me-1"></i> Refresh Stats
+      </button>
+    </div>
+
+    <!-- KPI Grid -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-3 col-6">
+        <div class="stat-card">
+          <div>
+            <div class="text-muted small">Registered Users</div>
+            <h3 class="fw-bold mb-0 mt-1" id="saTotalUsers">---</h3>
+          </div>
+          <div class="stat-icon bg-primary bg-opacity-10 text-primary"><i class="bi bi-people-fill"></i></div>
+        </div>
+      </div>
+
+      <div class="col-md-3 col-6">
+        <div class="stat-card">
+          <div>
+            <div class="text-muted small">Partner Restaurants</div>
+            <h3 class="fw-bold mb-0 mt-1" id="saTotalRestaurants">---</h3>
+          </div>
+          <div class="stat-icon bg-success bg-opacity-10 text-success"><i class="bi bi-shop-window"></i></div>
+        </div>
+      </div>
+
+      <div class="col-md-3 col-6">
+        <div class="stat-card">
+          <div>
+            <div class="text-muted small">Total Platform Orders</div>
+            <h3 class="fw-bold mb-0 mt-1" id="saTotalOrders">---</h3>
+          </div>
+          <div class="stat-icon bg-info bg-opacity-10 text-info"><i class="bi bi-receipt"></i></div>
+        </div>
+      </div>
+
+      <div class="col-md-3 col-6">
+        <div class="stat-card">
+          <div>
+            <div class="text-muted small">Platform Commission (15%)</div>
+            <h3 class="fw-bold brand-orange mb-0 mt-1" id="saCommission">₹---</h3>
+          </div>
+          <div class="stat-icon bg-warning bg-opacity-10 text-warning"><i class="bi bi-wallet2"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs for User Management & Restaurant Management -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+      <ul class="nav nav-tabs border-bottom mb-4">
+        <li class="nav-item">
+          <button class="nav-link active fw-bold" data-bs-toggle="tab" data-bs-target="#tabUsers">
+            <i class="bi bi-person-lines-fill me-2"></i> User Management
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#tabRestaurants">
+            <i class="bi bi-buildings me-2"></i> Restaurant Management
+          </button>
+        </li>
+      </ul>
+
+      <div class="tab-content">
+        <!-- Users Tab -->
+        <div class="tab-pane fade show active" id="tabUsers">
+          <section class="card border-0 bg-light rounded-4 p-3 p-lg-4 mb-4" aria-labelledby="newDeliveryPartnerTitle">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+              <div>
+                <span class="badge bg-info-subtle text-info-emphasis mb-2">DELIVERY TEAM</span>
+                <h2 id="newDeliveryPartnerTitle" class="h5 fw-bold mb-1">Add a delivery partner</h2>
+                <p class="small text-muted mb-0">Create a secure sign-in and delivery profile. The new partner starts offline.</p>
+              </div>
+              <i class="bi bi-bicycle text-info fs-3" aria-hidden="true"></i>
+            </div>
+            <form id="deliveryPartnerForm" class="row g-3">
+              <div class="col-md-6 col-xl-4">
+                <label class="form-label small fw-semibold" for="partnerName">Full name</label>
+                <input class="form-control" id="partnerName" name="full_name" autocomplete="name" required minlength="2" maxlength="100">
+              </div>
+              <div class="col-md-6 col-xl-4">
+                <label class="form-label small fw-semibold" for="partnerEmail">Email</label>
+                <input class="form-control" id="partnerEmail" name="email" type="email" autocomplete="email" required maxlength="120">
+              </div>
+              <div class="col-md-6 col-xl-4">
+                <label class="form-label small fw-semibold" for="partnerPhone">Phone</label>
+                <input class="form-control" id="partnerPhone" name="phone" type="tel" autocomplete="tel" maxlength="20">
+              </div>
+              <div class="col-md-6 col-xl-4">
+                <label class="form-label small fw-semibold" for="partnerInitialPassword">Initial password</label>
+                <input class="form-control" id="partnerInitialPassword" name="password" type="password" autocomplete="new-password" required minlength="8" maxlength="72">
+                <div class="form-text">Share it privately. The partner can sign in at the normal login page.</div>
+              </div>
+              <div class="col-md-6 col-xl-4">
+                <label class="form-label small fw-semibold" for="partnerVehicleType">Vehicle type</label>
+                <input class="form-control" id="partnerVehicleType" name="vehicle_type" value="Motorcycle" required minlength="2" maxlength="50">
+              </div>
+              <div class="col-md-6 col-xl-4">
+                <label class="form-label small fw-semibold" for="partnerVehicleNumber">Vehicle registration</label>
+                <input class="form-control" id="partnerVehicleNumber" name="vehicle_number" placeholder="Optional registration" maxlength="30">
+              </div>
+              <div class="col-12 d-flex flex-wrap align-items-center gap-3">
+                <button id="createDeliveryPartnerButton" class="btn btn-primary-orange" type="submit"><i class="bi bi-person-plus me-1" aria-hidden="true"></i>Create delivery account</button>
+                <span class="small text-muted">Only a super admin can create delivery accounts.</span>
+              </div>
+            </form>
+          </section>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light small text-uppercase">
+                <tr>
+                  <th>User ID</th>
+                  <th>Full Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Loyalty Points</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="saUsersTableBody">
+                <!-- Dynamic rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Restaurants Tab -->
+        <div class="tab-pane fade" id="tabRestaurants">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light small text-uppercase">
+                <tr>
+                  <th>Restaurant</th>
+                  <th>Cuisine</th>
+                  <th>City</th>
+                  <th>Rating</th>
+                  <th>Delivery SLA</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="saRestaurantsTableBody">
+                <!-- Dynamic rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/ui.js"></script>
+  <script src="/js/auth.js"></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      if (!Auth.checkAuthGuard(["super_admin"])) return;
+      loadSuperAdminData();
+      document.getElementById("deliveryPartnerForm").addEventListener("submit", createDeliveryPartner);
+    });
+
+    async function createDeliveryPartner(event) {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const button = document.getElementById("createDeliveryPartnerButton");
+      const payload = Object.fromEntries(new FormData(form).entries());
+      payload.full_name = payload.full_name.trim();
+      payload.email = payload.email.trim().toLowerCase();
+      payload.phone = payload.phone.trim() || null;
+      payload.vehicle_type = payload.vehicle_type.trim();
+      payload.vehicle_number = payload.vehicle_number.trim() || "Not provided";
+
+      button.disabled = true;
+      button.setAttribute("aria-busy", "true");
+      try {
+        const partner = await API.createDeliveryPartner(payload);
+        Auth.showToast(`${partner.full_name} can now sign in as a delivery partner.`, "success");
+        form.reset();
+        await loadSuperAdminData();
+      } catch (error) {
+        Auth.showToast(error.message || "Could not create the delivery account.", "danger");
+      } finally {
+        button.disabled = false;
+        button.removeAttribute("aria-busy");
+      }
+    }
+
+    async function loadSuperAdminData() {
+      try {
+        const stats = await API.getSuperAdminStats();
+        document.getElementById("saTotalUsers").textContent = stats.total_users;
+        document.getElementById("saTotalRestaurants").textContent = stats.total_restaurants;
+        document.getElementById("saTotalOrders").textContent = stats.total_orders;
+        document.getElementById("saCommission").textContent = `₹${stats.platform_revenue.toFixed(2)}`;
+
+        // Users
+        const users = await API.getSuperAdminUsers();
+        document.getElementById("saUsersTableBody").innerHTML = users.map(u => `
+          <tr>
+            <td>#${u.id}</td>
+            <td><strong>${UI.escapeHtml(u.full_name)}</strong></td>
+            <td>${UI.escapeHtml(u.email)}</td>
+            <td><span class="badge bg-light text-dark border text-uppercase">${u.role}</span></td>
+            <td>${u.loyalty_points} pts</td>
+            <td>
+              <span class="badge ${u.is_active ? 'bg-success' : 'bg-danger'}">
+                ${u.is_active ? 'Active' : 'Deactivated'}
+              </span>
+            </td>
+            <td>
+              ${u.role !== 'super_admin' ? `
+                <button class="btn btn-sm ${u.is_active ? 'btn-outline-danger' : 'btn-outline-success'} py-0 px-2" onclick="toggleUser(${u.id})">
+                  ${u.is_active ? 'Deactivate' : 'Activate'}
+                </button>
+              ` : '<span class="text-muted small">Protected</span>'}
+            </td>
+          </tr>
+        `).join('');
+
+        // Restaurants
+        const restaurants = await API.getSuperAdminRestaurants();
+        document.getElementById("saRestaurantsTableBody").innerHTML = restaurants.map(r => `
+          <tr>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <img src="${UI.imageUrl(r.image_url) || '/static/assets/restaurant-placeholder.svg'}" class="rounded-2 admin-restaurant-thumbnail" alt="${UI.escapeHtml(r.name)}">
+                <div>
+                  <strong>${r.name}</strong>
+                  ${r.is_pure_veg ? '<span class="badge bg-success ms-1 admin-veg-badge">Pure Veg</span>' : ''}
+                </div>
+              </div>
+            </td>
+            <td>${r.cuisine_type}</td>
+            <td>${r.city}</td>
+            <td><span class="badge-rating"><i class="bi bi-star-fill text-warning me-1"></i>${r.rating.toFixed(1)}</span></td>
+            <td>${r.delivery_time_mins} mins</td>
+            <td>
+              <span class="badge ${r.is_active ? 'bg-success' : 'bg-danger'}">
+                ${r.is_active ? 'Active' : 'Inactive'}
+              </span>
+            </td>
+            <td>
+              <button class="btn btn-sm ${r.is_active ? 'btn-outline-danger' : 'btn-outline-success'} py-0 px-2" onclick="toggleRestaurant(${r.id})">
+                ${r.is_active ? 'Suspend' : 'Activate'}
+              </button>
+            </td>
+          </tr>
+        `).join('');
+
+      } catch (err) {
+        console.error("Super Admin error:", err);
+      }
+    }
+
+    async function toggleUser(userId) {
+      try {
+        const res = await API.toggleUserStatus(userId);
+        Auth.showToast(res.message, "info");
+        loadSuperAdminData();
+      } catch (err) {
+        Auth.showToast(err.message, "danger");
+      }
+    }
+
+    async function toggleRestaurant(restId) {
+      try {
+        const res = await API.toggleRestaurantStatus(restId);
+        Auth.showToast(res.message, "info");
+        loadSuperAdminData();
+      } catch (err) {
+        Auth.showToast(err.message, "danger");
+      }
+    }
+  </script>
+</body>
+</html>

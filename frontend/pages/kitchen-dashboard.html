@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111827">
+  <title>Kitchen Display | AI Foodie</title>
+  <link rel="icon" href="/static/assets/aifoodie-mark.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css?v=20261118-visual-refresh">
+</head>
+<body class="kds-app">
+  <header class="kds-topbar">
+    <a class="kds-brand" href="/" aria-label="AI Foodie home">
+      <span class="kds-brand-mark" aria-hidden="true"><img src="/static/assets/aifoodie-mark.svg" alt=""></span>
+      <span><strong>AI Foodie</strong><small>Kitchen operations</small></span>
+    </a>
+    <div class="kds-heading">
+      <h1>Kitchen Display System</h1>
+      <p>Prioritized order queue · refreshes automatically</p>
+    </div>
+    <div class="kds-toolbar">
+      <span id="wsLiveIndicator" class="kds-live-badge" role="status" aria-live="polite">Connecting…</span>
+      <time id="kdsClock" class="kds-clock"></time>
+      <button id="refreshQueue" class="btn btn-sm btn-outline-light" type="button">
+        <i class="bi bi-arrow-clockwise me-1" aria-hidden="true"></i>Refresh
+      </button>
+      <a class="btn btn-sm btn-outline-warning" href="/pages/admin-dashboard.html">Admin dashboard</a>
+      <button class="btn btn-sm btn-outline-danger" id="kdsLogout" type="button">Sign out</button>
+    </div>
+  </header>
+
+  <main class="kds-main">
+    <div class="kds-board-heading">
+      <div>
+        <span class="kds-eyebrow">LIVE SERVICE</span>
+        <h2>Order flow</h2>
+      </div>
+      <p id="queueUpdatedAt" class="kds-updated" role="status">Loading orders…</p>
+    </div>
+
+    <section class="kds-board" aria-label="Order flow board">
+      <section class="kds-lane kds-lane-new" aria-labelledby="newOrdersTitle">
+        <header class="kds-lane-heading">
+          <div><span class="kds-lane-index">01</span><h3 id="newOrdersTitle">New orders</h3></div>
+          <span class="kds-count" id="countNew">0</span>
+        </header>
+        <div id="laneNew" class="kds-lane-list" aria-live="polite"></div>
+      </section>
+
+      <section class="kds-lane kds-lane-progress" aria-labelledby="inProgressTitle">
+        <header class="kds-lane-heading">
+          <div><span class="kds-lane-index">02</span><h3 id="inProgressTitle">In progress</h3></div>
+          <span class="kds-count" id="countProgress">0</span>
+        </header>
+        <div id="laneProgress" class="kds-lane-list" aria-live="polite"></div>
+      </section>
+
+      <section class="kds-lane kds-lane-ready" aria-labelledby="readyTitle">
+        <header class="kds-lane-heading">
+          <div><span class="kds-lane-index">03</span><h3 id="readyTitle">Ready for pickup</h3></div>
+          <span class="kds-count" id="countReady">0</span>
+        </header>
+        <div id="laneReady" class="kds-lane-list" aria-live="polite"></div>
+      </section>
+
+      <section class="kds-lane kds-lane-completed" aria-labelledby="completedTitle">
+        <header class="kds-lane-heading">
+          <div><span class="kds-lane-index">04</span><h3 id="completedTitle">Completed today</h3></div>
+          <span class="kds-count" id="countCompleted">0</span>
+        </header>
+        <div id="laneCompleted" class="kds-lane-list" aria-live="polite"></div>
+      </section>
+    </section>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/websocket.js"></script>
+  <script src="/js/ui.js"></script>
+  <script src="/js/kitchen.js"></script>
+</body>
+</html>

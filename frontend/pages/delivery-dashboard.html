@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Delivery Partner Dashboard – AI Foodie</title>
+  <link rel="icon" href="/static/assets/aifoodie-mark.svg" type="image/svg+xml">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/style.css?v=20261118-visual-refresh">
+</head>
+<body class="bg-light">
+
+  <!-- Top Navbar -->
+  <nav class="navbar navbar-custom sticky-top px-3">
+    <div class="container-fluid">
+      <div class="d-flex align-items-center gap-3">
+        <a class="navbar-brand d-flex align-items-center gap-2 mb-0" href="/">
+          <img class="brand-logo" src="/static/assets/aifoodie-mark.svg" alt="" aria-hidden="true">
+          <span class="brand-font fs-5 text-dark">AI Foodie <span class="badge bg-info text-dark ms-1">DELIVERY PARTNER</span></span>
+        </a>
+        <span id="wsLiveIndicator" class="badge bg-secondary-subtle text-secondary border">○ Connecting...</span>
+      </div>
+
+      <div class="d-flex align-items-center gap-3">
+        <div class="form-check form-switch bg-white border rounded-pill px-3 py-1">
+          <input class="form-check-input" type="checkbox" id="riderAvailSwitch" disabled>
+          <label class="form-check-label small fw-bold text-secondary" id="riderAvailLabel" for="riderAvailSwitch">Loading availability…</label>
+        </div>
+        <button class="btn btn-outline-danger btn-sm" onclick="API.logout()">
+          Logout
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container py-4">
+    <!-- Driver Profile & Earnings Summary -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+      <div class="row align-items-center gy-3">
+        <div class="col-md-7">
+          <div class="d-flex align-items-center gap-3">
+            <div class="bg-info bg-opacity-10 text-info p-3 rounded-circle fs-3">
+              <i class="bi bi-person-badge"></i>
+            </div>
+            <div>
+              <h4 class="fw-bold mb-0" id="driverName">Loading your profile…</h4>
+              <div class="small text-muted"><span id="driverVehicleType">Vehicle pending</span> · <span id="driverVehicleNumber">Registration not provided</span></div>
+              <div class="small text-success mt-1"><i class="bi bi-star-fill text-warning me-1"></i><span id="driverRating">New partner</span> rating</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-5">
+          <div class="d-flex justify-content-md-end gap-3 text-center">
+            <div class="p-3 bg-light rounded-3 flex-grow-1 flex-md-grow-0 delivery-stat-card">
+              <span class="text-muted small">Today's Earnings</span>
+              <h3 class="fw-bold brand-orange mb-0" id="driverEarnings">—</h3>
+            </div>
+            <div class="p-3 bg-light rounded-3 flex-grow-1 flex-md-grow-0 delivery-stat-card">
+              <span class="text-muted small">Deliveries Done</span>
+              <h3 class="fw-bold text-success mb-0" id="driverTripCount">—</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Assigned Orders -->
+    <div class="row g-4">
+      <!-- Assigned Orders List -->
+      <div class="col-lg-7">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0">Active Deliveries & Assignments</h5>
+          <button class="btn btn-outline-dark btn-sm rounded-pill" onclick="loadDeliveryOrders()">
+            <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+          </button>
+        </div>
+
+        <div id="deliveryOrdersList" class="d-flex flex-column gap-3">
+          <!-- Dynamic cards -->
+          <div class="text-center py-5"><div class="spinner-border text-warning" role="status"></div></div>
+        </div>
+      </div>
+
+      <!-- Live GPS Map Simulator -->
+      <div class="col-lg-5">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white sticky-top delivery-map-panel">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0"><i class="bi bi-crosshair text-danger me-2"></i>Live GPS Route</h5>
+            <span class="badge bg-success-subtle text-success border border-success">Demo GPS Active</span>
+          </div>
+
+          <label class="form-label small fw-semibold" for="trackingOrderSelect">Order to track</label>
+          <select id="trackingOrderSelect" class="form-select form-select-sm mb-2"><option value="">Load assigned orders first</option></select>
+          <div class="d-flex gap-2 mb-2">
+            <button id="startPartnerGps" type="button" class="btn btn-sm btn-success" disabled>Start live GPS</button>
+            <button id="simulatePartnerGps" type="button" class="btn btn-sm btn-outline-primary" disabled>Simulate Movement</button>
+            <button id="stopPartnerGps" type="button" class="btn btn-sm btn-outline-secondary" disabled>Stop</button>
+          </div>
+          <p id="partnerGpsStatus" class="small text-muted" role="status">Choose an assigned order to connect.</p>
+          <div id="partnerMap" class="rounded-4 overflow-hidden border mb-3 delivery-map"></div>
+
+          <div class="alert alert-light border small text-muted mb-3 py-2">
+            <i class="bi bi-geo-alt-fill text-danger me-1"></i> Current Simulated Location: <strong>Koramangala 5th Block, Bangalore (12.9352° N, 77.6245° E)</strong>
+          </div>
+
+          <h6 class="fw-bold small text-muted text-uppercase mb-2">Delivery Partner Guidelines</h6>
+          <ul class="small text-secondary ps-3 mb-0">
+            <li>Verify food package sealed sticker before pickup.</li>
+            <li>Use thermal delivery bag to keep dishes hot.</li>
+            <li>Contact customer directly if gate access is gated.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/websocket.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="/js/partner_tracking.js"></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Guard: Delivery Partner or Super Admin
+      if (!Auth.checkAuthGuard(["delivery_partner", "super_admin"])) return;
+
+      loadDeliveryOrders();
+      loadDriverStats();
+      PartnerTracking.initialize();
+      document.getElementById("riderAvailSwitch").addEventListener("change", async event => {
+        const toggle = event.currentTarget;
+        const previousAvailability = !toggle.checked;
+        toggle.disabled = true;
+        try {
+          const result = await API.setDeliveryAvailability(toggle.checked);
+          toggle.checked = result.is_available;
+          renderAvailability(result.is_available);
+          Auth.showToast(result.is_available ? "You are available for new deliveries." : "You are offline for new assignments.", "success");
+        } catch (error) {
+          toggle.checked = previousAvailability;
+          renderAvailability(previousAvailability);
+          Auth.showToast(error.message, "danger");
+        } finally {
+          toggle.disabled = false;
+        }
+      });
+
+      WSClient.addListener((event) => {
+        if (["NEW_ORDER", "DELIVERY_STATUS_UPDATED", "KITCHEN_ORDER_UPDATED"].includes(event.event)) {
+          loadDeliveryOrders();
+          loadDriverStats();
+        }
+      });
+    });
+
+    async function loadDriverStats() {
+      try {
+        const [stats, user] = await Promise.all([API.getDeliveryStats(), API.getMe()]);
+        document.getElementById("driverName").textContent = user.full_name || "Delivery partner";
+        document.getElementById("driverVehicleType").textContent = stats.vehicle_type || "Vehicle not set";
+        document.getElementById("driverVehicleNumber").textContent = stats.vehicle_number || "Registration not provided";
+        document.getElementById("driverRating").textContent = Number(stats.rating) > 0
+          ? Number(stats.rating).toFixed(1)
+          : "New partner";
+        document.getElementById("driverEarnings").textContent = `₹${Number(stats.total_earnings || 0).toFixed(2)}`;
+        document.getElementById("driverTripCount").textContent = Number(stats.total_deliveries || 0).toLocaleString();
+        const availabilitySwitch = document.getElementById("riderAvailSwitch");
+        availabilitySwitch.checked = Boolean(stats.is_available);
+        availabilitySwitch.disabled = false;
+        renderAvailability(availabilitySwitch.checked);
+      } catch (err) {
+        console.error(err);
+        const availabilitySwitch = document.getElementById("riderAvailSwitch");
+        availabilitySwitch.disabled = true;
+        document.getElementById("riderAvailLabel").textContent = "Availability unavailable";
+      }
+    }
+
+    function renderAvailability(isAvailable) {
+      const label = document.getElementById("riderAvailLabel");
+      label.textContent = isAvailable ? "Online · accepting deliveries" : "Offline · not receiving orders";
+      label.classList.toggle("text-success", isAvailable);
+      label.classList.toggle("text-secondary", !isAvailable);
+    }
+
+    async function loadDeliveryOrders() {
+      const container = document.getElementById("deliveryOrdersList");
+      try {
+        const orders = await API.getAssignedDeliveries();
+        if (orders.length === 0) {
+          container.innerHTML = `
+            <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
+              <i class="bi bi-check2-circle fs-1 text-success mb-2"></i>
+              <h5 class="fw-bold">No Pending Deliveries</h5>
+              <p class="text-muted small mb-0">You're all caught up! New orders dispatched by the AI system will appear here instantly.</p>
+            </div>
+          `;
+          return;
+        }
+
+        PartnerTracking.setOrders(orders);
+        container.innerHTML = orders.map(o => `
+          <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div>
+                <span class="badge bg-secondary-subtle text-dark border mb-1">#${o.order_number}</span>
+                <h5 class="fw-bold mb-0">${o.restaurant_name}</h5>
+                <span class="small text-muted"><i class="bi bi-geo-alt me-1"></i>${o.restaurant_address}</span>
+              </div>
+              <div class="text-end">
+                <span class="badge bg-warning text-dark text-uppercase">${o.status}</span>
+                <div class="fw-bold brand-orange fs-5 mt-1">+₹${o.delivery_fee_earning.toFixed(0)} Pay</div>
+              </div>
+            </div>
+
+            <!-- Customer & Delivery address box -->
+            <div class="p-3 bg-light rounded-3 mb-3 border">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <strong class="small text-dark"><i class="bi bi-person me-1"></i>${o.customer_name}</strong>
+                <a href="tel:${o.customer_phone}" class="btn btn-sm btn-outline-dark py-0 px-2 rounded-pill"><i class="bi bi-telephone me-1"></i>Call</a>
+              </div>
+              <div class="small text-secondary mb-1"><strong>Drop Address:</strong> ${o.delivery_address}</div>
+              ${o.customer_notes ? `<div class="small text-danger"><strong>Note:</strong> ${o.customer_notes}</div>` : ''}
+            </div>
+
+            <!-- Step Action Buttons -->
+            <div class="d-flex gap-2">
+              ${o.status === 'confirmed' || o.status === 'preparing' ? `
+                <div class="small text-muted flex-grow-1 py-2">Waiting for the kitchen to mark this order ready.</div>
+              ` : ''}
+
+              ${o.status === 'ready' ? `
+                <button class="btn btn-primary btn-sm flex-grow-1 fw-bold" onclick="deliveryAction(${o.order_id}, 'picked_up')">
+                  <i class="bi bi-bag-check me-1"></i> Picked Up from Kitchen
+                </button>
+              ` : ''}
+
+              ${o.status === 'out_for_delivery' ? `
+                <button class="btn btn-success btn-sm flex-grow-1 fw-bold py-2" onclick="deliveryAction(${o.order_id}, 'delivered')">
+                  <i class="bi bi-check2-circle me-1"></i> Mark Delivered & Collect Payment
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        container.innerHTML = `<div class="alert alert-danger">${err.message}</div>`;
+      }
+    }
+
+    async function deliveryAction(orderId, action) {
+      try {
+        await API.updateDeliveryAction(orderId, action);
+        Auth.showToast(`Updated order status to ${action}!`, "success");
+        loadDeliveryOrders();
+        loadDriverStats();
+      } catch (err) {
+        Auth.showToast(err.message, "danger");
+      }
+    }
+
+    function startRiderMap() {
+      const canvas = document.getElementById("riderMapCanvas");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+
+      let t = 0;
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // City streets grid
+        ctx.strokeStyle = "#CBD5E1";
+        ctx.lineWidth = 1;
+        for (let x = 0; x < canvas.width; x += 40) {
+          ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+        }
+        for (let y = 0; y < canvas.height; y += 40) {
+          ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+        }
+
+        // Road Highway
+        ctx.beginPath();
+        ctx.strokeStyle = "#10B981";
+        ctx.lineWidth = 5;
+        ctx.moveTo(40, 200);
+        ctx.lineTo(180, 120);
+        ctx.lineTo(340, 50);
+        ctx.stroke();
+
+        // Nodes
+        ctx.fillStyle = "#1E293B";
+        ctx.beginPath(); ctx.arc(40, 200, 6, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#000";
+        ctx.fillText("Hub", 30, 220);
+
+        ctx.fillStyle = "#16A34A";
+        ctx.beginPath(); ctx.arc(340, 50, 6, 0, Math.PI * 2); ctx.fill();
+        ctx.fillText("Drop", 330, 40);
+
+        // Moving Scooter
+        const cycle = (t % 300) / 300.0;
+        let rx, ry;
+        if (cycle < 0.5) {
+          const sub = cycle / 0.5;
+          rx = 40 + (180 - 40) * sub;
+          ry = 200 + (120 - 200) * sub;
+        } else {
+          const sub = (cycle - 0.5) / 0.5;
+          rx = 180 + (340 - 180) * sub;
+          ry = 120 + (50 - 120) * sub;
+        }
+
+        ctx.fillStyle = "#FF6B00";
+        ctx.beginPath(); ctx.arc(rx, ry, 9, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#FFF";
+        ctx.font = "10px sans-serif";
+        ctx.fillText("🛵", rx - 6, ry + 4);
+
+        t++;
+        requestAnimationFrame(animate);
+      }
+      animate();
+    }
+  </script>
+</body>
+</html>

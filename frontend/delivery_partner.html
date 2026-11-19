@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f97316">
+  <title>Delivery Partner Location | AI Foodie</title>
+  <link rel="icon" href="/static/assets/aifoodie-mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="/css/style.css?v=20261118-visual-refresh">
+</head>
+<body class="partner-location-page">
+  <main class="partner-location-wrap">
+    <header class="partner-location-header">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="/pages/delivery-dashboard.html">
+        <img class="brand-logo" src="/static/assets/aifoodie-mark.svg" alt="" aria-hidden="true">
+        <span class="brand-font fs-4 text-dark">AI <span class="brand-orange">Foodie</span></span>
+      </a>
+      <a class="btn btn-outline-dark btn-sm" href="/pages/delivery-dashboard.html">Assigned orders</a>
+    </header>
+
+    <section class="partner-location-card" aria-labelledby="locationTitle">
+      <div>
+        <span class="badge badge-orange mb-2">DELIVERY PARTNER</span>
+        <h1 id="locationTitle" class="h3 fw-bold">Share your live location</h1>
+        <p class="text-muted">Connect to an assigned order, then share GPS or simulate movement for a local demo.</p>
+      </div>
+      <form id="connectForm" class="partner-connect-form">
+        <label class="form-label fw-semibold" for="orderId">Assigned order ID</label>
+        <div class="input-group">
+          <input id="orderId" class="form-control" type="number" min="1" step="1" inputmode="numeric" required>
+          <button class="btn btn-primary-orange" type="submit">Connect</button>
+        </div>
+      </form>
+      <div class="partner-location-controls" aria-label="Location controls">
+        <button id="gps" class="btn btn-primary-orange" type="button" disabled>Start live GPS</button>
+        <button id="simulate" class="btn btn-outline-orange" type="button" disabled>Simulate movement</button>
+        <button id="stop" class="btn btn-outline-dark" type="button" disabled>Stop sharing</button>
+      </div>
+      <p id="status" class="partner-location-status" role="status" aria-live="polite">Disconnected</p>
+      <div id="partnerMap" class="partner-location-map" role="region" aria-label="Delivery partner location map"></div>
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/delivery-partner-location.js"></script>
+</body>
+</html>

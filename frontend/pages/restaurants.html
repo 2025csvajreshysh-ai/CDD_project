@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Restaurants – AI Foodie</title>
+  <link rel="icon" href="/static/assets/aifoodie-mark.svg" type="image/svg+xml">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/style.css?v=20261118-visual-refresh">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+    <div class="container">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+        <img class="brand-logo" src="/static/assets/aifoodie-mark.svg" alt="" aria-hidden="true">
+        <div>
+          <span class="brand-font fs-4 text-dark">AI <span class="brand-orange">Foodie</span></span>
+        </div>
+      </a>
+
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navContent">
+        <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-1">
+          <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+          <li class="nav-item"><a class="nav-link active" href="/pages/restaurants.html">Restaurants</a></li>
+          <li class="nav-item"><a class="nav-link" href="/pages/cart.html">Cart</a></li>
+          <li class="nav-item"><a class="nav-link" href="/pages/customer-dashboard.html">Dashboard</a></li>
+        </ul>
+
+        <div class="d-flex align-items-center gap-3">
+          <a href="/pages/cart.html" class="position-relative text-dark text-decoration-none p-2" title="View Cart">
+            <i class="bi bi-cart3 fs-4"></i>
+            <span id="cartBadgeCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-brand-orange cart-badge d-none">0</span>
+          </a>
+          <div id="navAuthContainer"></div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Filter & Header Section -->
+  <section class="restaurant-filter-section py-4 bg-white border-bottom" aria-label="Restaurant filters">
+    <div class="container">
+      <div class="row align-items-center gy-3">
+        <div class="col-md-5">
+          <span class="badge badge-orange mb-2">FIND YOUR NEXT MEAL</span>
+          <h1 class="h3 fw-bold mb-1">Browse restaurants</h1>
+          <p class="text-muted small mb-0">Explore partner kitchens and order something fresh.</p>
+        </div>
+        <div class="col-md-7">
+          <div class="restaurant-filter-controls">
+            <div class="input-group restaurant-search-input">
+              <label class="visually-hidden" for="restaurantSearchInput">Search restaurants or cuisines</label>
+              <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted" aria-hidden="true"></i></span>
+              <input type="search" id="restaurantSearchInput" class="form-control border-start-0 bg-light" placeholder="Search restaurants or cuisines..." autocomplete="off">
+            </div>
+            <div class="form-check form-switch bg-light border rounded-pill px-3 py-2 restaurant-veg-toggle">
+              <input class="form-check-input" type="checkbox" id="pureVegSwitch">
+              <label class="form-check-label small fw-bold text-success" for="pureVegSwitch">Pure Veg Only</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cuisine tags -->
+      <div id="cuisineFilters" class="cuisine-filter-list pt-3" role="group" aria-label="Filter by cuisine">
+        <button class="btn btn-sm btn-outline-dark rounded-pill active btn-dark" type="button" data-cuisine="" aria-pressed="true">All cuisines</button>
+        <button class="btn btn-sm btn-outline-dark rounded-pill" type="button" data-cuisine="South Indian" aria-pressed="false">South Indian</button>
+        <button class="btn btn-sm btn-outline-dark rounded-pill" type="button" data-cuisine="North Indian" aria-pressed="false">North Indian</button>
+        <button class="btn btn-sm btn-outline-dark rounded-pill" type="button" data-cuisine="Pizza" aria-pressed="false">Pizza / Italian</button>
+        <button class="btn btn-sm btn-outline-dark rounded-pill" type="button" data-cuisine="Burger" aria-pressed="false">Burgers</button>
+        <button class="btn btn-sm btn-outline-dark rounded-pill" type="button" data-cuisine="Biryani" aria-pressed="false">Biryani</button>
+      </div>
+    </div>
+  </section>
+
+  <main class="container py-4 py-lg-5 restaurant-list-main">
+    <div class="restaurant-results-toolbar">
+      <p id="restaurantResultsMeta" class="small text-muted mb-0" role="status" aria-live="polite">Loading restaurants...</p>
+      <button id="clearRestaurantFilters" class="btn btn-sm btn-link brand-orange p-0" type="button" hidden>Clear filters</button>
+    </div>
+    <div class="row g-4" id="restaurantsContainer" aria-busy="true" aria-live="polite">
+      <div class="text-center py-5">
+        <div class="spinner-border text-warning" role="status"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-4 bg-dark text-secondary mt-auto">
+    <div class="container text-center small">
+      © 2026 AI Foodie. Smart Food. Smarter Choices.
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/ui.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/cart.js"></script>
+  <script src="/js/chatbot.js"></script>
+  <script src="/js/websocket.js"></script>
+
+  <script src="/js/restaurants.js"></script>
+</body>
+</html>
